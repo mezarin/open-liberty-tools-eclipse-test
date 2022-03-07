@@ -42,28 +42,28 @@ public class DevModeOperations {
             Dialog.displayErrorMessage("Unable to find the home path to selected project: " + projName);
             return;
         }
-        String cmd = "";
-        if (Project.isMaven(project)) {
-            if (!Project.isMavenBuildFileValid(project)) {
-                System.out.println("Maven build file on project" + projName + " is not valid..");
-            }
-
-            cmd = "mvn io.openliberty.tools:liberty-maven-plugin:dev -f " + projectPath;
-            cmd = Paths.get(getMavenInstallHome(), "bin", cmd).toString();
-        } else if (Project.isGradle(project)) {
-            if (!Project.isGradleBuildFileValid(project)) {
-                System.out.println("Build file on project" + projName + " is not valid.");
-            }
-
-            cmd += "gradle libertyDev -b=" + projectPath;
-            cmd = Paths.get(getGradleInstallHome(), "bin", cmd).toString();
-        } else {
-            Dialog.displayErrorMessage("Project" + projName + "is not a Gradle or Maven project.");
-
-            return;
-        }
-
+        
         try {
+            String cmd = "";
+            if (Project.isMaven(project)) {
+                if (!Project.isMavenBuildFileValid(project)) {
+                    System.out.println("Maven build file on project" + projName + " is not valid..");
+                }
+
+                cmd = "mvn io.openliberty.tools:liberty-maven-plugin:dev -f " + projectPath;
+                cmd = Paths.get(getMavenInstallHome(), "bin", cmd).toString();
+            } else if (Project.isGradle(project)) {
+                if (!Project.isGradleBuildFileValid(project)) {
+                    System.out.println("Build file on project" + projName + " is not valid.");
+                }
+
+                cmd += "gradle libertyDev -b=" + projectPath;
+                cmd = Paths.get(getGradleInstallHome(), "bin", cmd).toString();
+            } else {
+                Dialog.displayErrorMessage("Project" + projName + "is not a Gradle or Maven project.");
+
+                return;
+            }
             runCommand(cmd);
         } catch (Exception e) {
             Dialog.displayErrorMessageWithDetails("An error was detected while performing the start action on project " + projName, e);
