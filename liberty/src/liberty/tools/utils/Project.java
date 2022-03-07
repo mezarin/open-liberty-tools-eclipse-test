@@ -18,6 +18,9 @@ import org.eclipse.ui.PlatformUI;
 
 public class Project {
 
+    public static final String LIBERTY_MAVEN_PLUGIN_CONTAINER_VERSION = "3.3-M1";
+    public static final String LIBERTY_GRADLE_PLUGIN_CONTAINER_VERSION = "3.1-M1";
+
     /**
      * Retrieves the project currently selected.
      * 
@@ -144,28 +147,172 @@ public class Project {
      * 
      * @return True if the Maven project's pom.xml file is configured to use Liberty development mode. False, otherwise.
      */
-    public static boolean isMavenBuildFileValid(IProject project) {
+    public static boolean isMavenBuildFileValid(IProject project) throws ParserConfigurationException, SAXException, IOException, CoreException {
         IFile file = project.getFile("pom.xml");
+		
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
 
-        // TODO: Implement. Check for Liberty Maven plugin and other needed definitions.
-        // Need some parsing tool.
+        Document doc = builder.parse(file.getContents());
 
-        return true;
+        doc.getDocumentElement().normalize();
+        Node root = doc.getDocumentElement();
+
+        NodeList nList = root.getChildNodes();
+        for (int temp = 0; temp < nList.getLength(); temp++) {
+            Node nNode = nList.item(temp);
+
+            // Check for liberty maven plugin in profiles
+            if (nNode.getNodeName().equals("profiles")) {
+                NodeList profiles = nNode.getChildNodes();
+                for (int i = 0; i < profiles.getLength(); i++) {
+                    Node profile = profiles.item(i);
+                    if (profile.getNodeName().equals("profile")) {
+                        NodeList profileList = profile.getChildNodes();
+                        for (int j = 0; j < profileList.getLength(); j++) {
+                            if (profileList.item(j).getNodeName().equals("build")) {
+                                NodeList buildNodeList = profileList.item(j).getChildNodes();
+                                return isLibertyMavenPluginDetected(buildNodeList);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check for liberty maven plugin in plugins
+            if (nNode.getNodeName().equals("build")) {
+                NodeList buildNodeList = nNode.getChildNodes();
+                if (isLibertyMavenPluginDetected(buildNodeList)) {
+                    return true;
+                }
+
+                // Check for liberty maven plugin in plugin management
+                // indicates this is a parent pom, list in the Liberty Dev Dashboard
+                for (int i = 0; i < buildNodeList.getLength(); i++) {
+                    Node buildNode = buildNodeList.item(i);
+                    if (buildNode.getNodeName().equals("pluginManagement")) {
+                        NodeList pluginManagementList = buildNode.getChildNodes();
+                        return isLibertyMavenPluginDetected(buildNodeList);
+                    }
+                }
+            }
+        }
+		
+		return false;
+	}
+	
+	private static boolean isLibertyMavenPluginDetected(NodeList buildList) {
+        for (int i = 0; i < buildList.getLength(); i++) {
+            Node buildNode = buildList.item(i);
+            if (buildNode.getNodeName().equals("plugins")) {
+                NodeList plugins = buildNode.getChildNodes();
+                if (buildNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element pluginsElem = (Element) buildNode;
+                    NodeList pluginsList = pluginsElem.getElementsByTagName("plugin");
+                    for (int j = 0; j < pluginsList.getLength(); j++) {
+                        Node pluginNode = pluginsList.item(j);
+                        if (pluginNode.getNodeType() == Node.ELEMENT_NODE) {
+                            Element pluginElem = (Element) pluginNode;
+                            String groupId = "";
+                            String artifactId = "";
+                            String version = "";
+                            if (pluginElem.getElementsByTagName("groupId").getLength() != 0) {
+                                groupId = pluginElem.getElementsByTagName("groupId").item(0).getTextContent();
+                            }
+                            if (pluginElem.getElementsByTagName("artifactId").getLength() != 0) {
+                                artifactId = pluginElem.getElementsByTagName("artifactId").item(0).getTextContent();
+                            }
+                            if (pluginElem.getElementsByTagName("version").getLength() != 0) {
+                                version = pluginElem.getElementsByTagName("version").item(0).getTextContent();
+                            }
+                            if (groupId.equals("io.openliberty.tools") && artifactId.equals("liberty-maven-plugin")){
+                                if (containerVersion(version)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**
-     * Returns true if the Gradle project's build file is configured to use Liberty development mode. False, otherwise.
-     * 
-     * @param project The Gradle project.
-     * 
-     * @return True if the Gradle project's build file is configured to use Liberty development mode. False, otherwise.
+     * Given liberty-maven-plugin version, determine if it is compatible for dev mode with containers
+     *
+     * @param version plugin version
+     * @return true if valid for dev mode in contianers
      */
-    public static boolean isGradleBuildFileValid(IProject project) {
-        IFile file = project.getFile("build.gradle");
-
-        // TODO: Implement. Check for Liberty Gradle plugin and other needed
-        // definitions. Need some xml parsing tool.
-
-        return true;
+    private static boolean containerVersion(String version){
+        try {
+            if (version.isEmpty()) {
+                return true;
+            }
+            ComparableVersion pluginVersion = new ComparableVersion(version);
+            ComparableVersion containerVersion = new ComparableVersion(LIBERTY_MAVEN_PLUGIN_CONTAINER_VERSION);
+            if (pluginVersion.compareTo(containerVersion) >= 0) {
+                return true;
+            }
+            return false;
+        } catch (NullPointerException | ClassCastException e) {
+            return false;
+        }
     }
+	
+	public static boolean isGradleBuildFileValid(IProject project) throws CoreException, IOException {
+		IFile file = project.getFile("build.gradle");
+		
+		// Read build.gradle file to String
+		BufferedInputStream bis = new BufferedInputStream(file.getContents());
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		for (int result = bis.read(); result != -1; result = bis.read()) {
+		    buf.write((byte) result);
+		}
+		
+		String buildFileText = buf.toString("UTF-8");
+
+         if (buildFileText.isEmpty()) { 
+        	 return false; 
+         }
+         
+         // Filter commented out lines in build.gradle
+         String partialFiltered = buildFileText.replaceAll("/\\*.*\\*/", "");
+         String buildFileTextFiltered = partialFiltered.replaceAll("//.*(?=\\n)", "");
+
+         // Check if "apply plugin: 'liberty'" is specified in the build.gradle
+         boolean libertyPlugin = false;
+        		 
+         String applyPluginRegex = "(?<=apply plugin:)(\\s*)('|\")liberty";
+         Pattern applyPluginPattern = Pattern.compile(applyPluginRegex);
+         Matcher applyPluginMatcher = applyPluginPattern.matcher(buildFileTextFiltered);
+         while (applyPluginMatcher.find()) {
+             libertyPlugin = true;
+         }
+         
+         // Check if liberty is in the plugins block
+         if (libertyPlugin) {
+             // check if group matches io.openliberty.tools and name matches liberty-gradle-plugin
+             String regex = "(?<=dependencies)(\\s*\\{)([^\\}]+)(?=\\})";
+             String regex2 = "(.*\\bio\\.openliberty\\.tools\\b.*)(.*\\bliberty-gradle-plugin\\b.*)";
+
+             Pattern pattern = Pattern.compile(regex);
+             Matcher matcher = pattern.matcher(buildFileTextFiltered);
+
+             while (matcher.find()) {
+                 String sub = buildFileTextFiltered.substring(matcher.start(), matcher.end());
+                 Pattern pattern2 = Pattern.compile(regex2);
+                 Matcher matcher2 = pattern2.matcher(sub);
+                 while (matcher2.find()) {
+                     String plugin = sub.substring(matcher2.start(), matcher2.end());
+                     return containerVersion(plugin);
+                 }
+             }
+         }
+         
+		return false;
+	}
+}
+
 }
