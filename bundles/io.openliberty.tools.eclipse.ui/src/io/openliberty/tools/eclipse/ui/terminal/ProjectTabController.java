@@ -16,13 +16,28 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabFolder2Listener;
+import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.tm.internal.terminal.provisional.api.ITerminalConnector;
+import org.eclipse.tm.terminal.view.ui.interfaces.ITerminalsView;
 import org.eclipse.tm.terminal.view.ui.interfaces.IUIConstants;
 import org.eclipse.tm.terminal.view.ui.manager.ConsoleManager;
+import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchPartSite;
+import org.eclipse.ui.PlatformUI;
 
+import io.openliberty.tools.eclipse.DevModeOperations;
 import io.openliberty.tools.eclipse.logging.Trace;
 import io.openliberty.tools.eclipse.ui.terminal.ProjectTab.State;
 
@@ -51,6 +66,110 @@ public class ProjectTabController {
      */
     private ProjectTabController() {
         this.consoleMgr = ConsoleManager.getInstance();
+        // registerListener();
+    }
+
+    private void registerListener() {
+        // if (!listenersRegistered) {
+
+        IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+        if (activePage != null) {
+            IViewPart viewPart = activePage.findView(IUIConstants.ID);
+            if (viewPart != null || (viewPart instanceof ITerminalsView)) {
+                ITerminalsView view = (ITerminalsView) viewPart;
+                CTabFolder folder = view.getAdapter(CTabFolder.class);
+                System.out.println("@ed: registering tab folder listener ...");
+
+                // Manages individual tabs
+                folder.addCTabFolder2Listener(new CTabFolder2Listener() {
+
+                    public void close(CTabFolderEvent event) {
+                        System.out.println("addCTabFolder2Listener close called. Event: " + event);
+                        CTabItem item = (CTabItem) event.item;
+                        if (item != null && !item.isDisposed()) {
+                            try {
+                                System.out.println("addCTabFolder2Listener close called. tooltip text tabitemt: " + item.getToolTipText());
+                                String projectName = (String) item.getText();
+                                ProjectTab projectTab = projectTabMap.get(projectName);
+                                String cmd = "exit" + System.lineSeparator();
+
+                                projectTab.writeToStream(cmd.getBytes());
+                                System.out.println("addCTabFolder2Listener close called. successfully called exit");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            System.out.println("addCTabFolder2Listener close called but item is already disabled. Event: " + event);
+                        }
+                        // projectTab.getParent().removeCTabFolder2Listener(this);
+                    }
+
+                    @Override
+                    public void maximize(CTabFolderEvent arg0) {
+                    }
+
+                    @Override
+                    public void minimize(CTabFolderEvent arg0) {
+                    }
+
+                    @Override
+                    public void restore(CTabFolderEvent arg0) {
+                    }
+
+                    @Override
+                    public void showList(CTabFolderEvent arg0) {
+                    }
+                });
+                // Manages all tabs. option 1. Not sure if it works ... it gets called prior to
+                // the terminal service dispose calls. Need to test to see if it is too late.
+                System.out.println("@ed: registering dispose ...");
+
+                folder.addDisposeListener(new DisposeListener() {
+                    @Override
+                    public void widgetDisposed(DisposeEvent event) {
+                        System.out.println("@ed: IPartListener close called. data: " + event.data);
+                        cleanupTerminalView();
+                    }
+                });
+
+                // Manages all tabs. option 2. I believe this works.
+                IWorkbenchPartSite site = viewPart.getViewSite();
+                IWorkbenchPage iwp = site.getPage();
+                System.out.println("@ed: registering part listener ...");
+                iwp.addPartListener(new IPartListener() {
+                    @Override
+                    public void partActivated(IWorkbenchPart arg0) { // TODO Auto-generated method stub
+
+                    }
+
+                    @Override
+                    public void partBroughtToTop(IWorkbenchPart arg0) { // TODO Auto-generated method stub
+                    }
+
+                    @Override
+                    public void partClosed(IWorkbenchPart part) {
+                        System.out
+                                .println("IPartListener close called. title: " + part.getTitle() + ", part id: " + part.getSite().getId());
+                        if (IUIConstants.ID.equals(part.getSite().getId())) {
+                            cleanupTerminalView();
+                        }
+                    }
+
+                    @Override
+                    public void partDeactivated(IWorkbenchPart arg0) { // TODO Auto-generated method stub
+
+                    }
+
+                    @Override
+                    public void partOpened(IWorkbenchPart arg0) { // TODO Auto-generated method stub
+
+                    }
+
+                });
+
+            }
+        }
+
     }
 
     /**
@@ -104,14 +223,14 @@ public class ProjectTabController {
     }
 
     /**
-     * Finds the tab item object associated with the terminal running the application represented by the input project name.
+     * Returns the terminal tab item associated with the specified project name and connector.
      *
      * @param projectName The application project name.
      * @param connector The terminal connector object associated with input project name.
      *
-     * @return The tab item object associated with the terminal running the application represented by the input project name.
+     * @return the terminal tab item associated with the specified project name and connector.
      */
-    public CTabItem findTerminalTab(String projectName, ITerminalConnector connector) {
+    public CTabItem getTerminalTabItem(String projectName, ITerminalConnector connector) {
         CTabItem item = null;
 
         if (connector != null) {
@@ -119,6 +238,17 @@ public class ProjectTabController {
         }
 
         return item;
+    }
+
+    /**
+     * Returns the ProjectTab instance associated with the specified project name.
+     *
+     * @param projectName The application project name.
+     *
+     * @return the ProjectTab instance associated with the specified project name.
+     */
+    public ProjectTab getProjectTab(String projectName) {
+        return projectTabMap.get(projectName);
     }
 
     public State getTerminalState(String projectName) {
@@ -226,6 +356,32 @@ public class ProjectTabController {
     }
 
     /**
+     * Exits Liberty dev mode running on all active terminal tabs.
+     */
+    public void cleanupTerminalView() {
+        for (Map.Entry<String, ProjectTab> entry : projectTabMap.entrySet()) {
+            String projectName = entry.getKey();
+            ProjectTab projectTab = entry.getValue();
+            exitDevMode(projectName, projectTab);
+        }
+    }
+
+    public void exitDevMode(String projectName, ProjectTab projectTab) {
+        if (projectTab != null) {
+            try {
+                System.out.println("@ed: exitDevModeRunningOnAllActiveTabs");
+                projectTab.writeToStream(DevModeOperations.DEVMODE_COMMAND_EXIT.getBytes());
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (Exception e) {
+                if (Trace.isEnabled()) {
+                    Trace.getTracer().trace(Trace.TRACE_UI, "Failed to exit dev mode associated with project " + projectName, e);
+                }
+            }
+        }
+
+    }
+
+    /**
      * Cleans up the objects associated with the terminal object represented by the input project name.
      *
      * @param projectName The application project name.
@@ -234,6 +390,7 @@ public class ProjectTabController {
         if (Trace.isEnabled()) {
             Trace.getTracer().traceEntry(Trace.TRACE_UI, new Object[] { projectName, projectTabMap.size() });
         }
+
         // Call the terminal object to do further cleanup.
         ProjectTab projectTab = projectTabMap.get(projectName);
         if (projectTab != null) {

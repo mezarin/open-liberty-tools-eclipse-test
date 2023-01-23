@@ -60,6 +60,8 @@ public class ProjectTab {
     /** State of this object. */
     private State state;
 
+    boolean listenersRegistered;
+
     /** Tab image */
     private Image libertyImage;
 
@@ -123,6 +125,8 @@ public class ProjectTab {
 
                     // Save the object representing the currently active console tab instance.
                     projectTab = getActiveProjectTab();
+
+                    // registerListener();
 
                     // Update the tab image with the Liberty logo.
                     updateImage();
@@ -220,6 +224,23 @@ public class ProjectTab {
         }
     }
 
+    public void exitRunningPricess(byte[] content) throws Exception {
+        if (Trace.isEnabled()) {
+            Trace.getTracer().traceEntry(Trace.TRACE_UI, new String(content));
+        }
+
+        if (connector != null) {
+            OutputStream terminalStream = connector.getTerminalToRemoteStream();
+            if (terminalStream != null) {
+                terminalStream.write(content);
+            }
+        }
+
+        if (Trace.isEnabled()) {
+            Trace.getTracer().traceExit(Trace.TRACE_UI);
+        }
+    }
+
     /**
      * Returns the active CTabItem object associated with the currently active terminal tab.
      *
@@ -244,6 +265,28 @@ public class ProjectTab {
 
         ITerminalsView view = (ITerminalsView) viewPart;
         TabFolderManager manager = view.getAdapter(TabFolderManager.class);
+        /*
+         * CTabFolder tabFolder = view.getAdapter(CTabFolder.class); tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() { public
+         * void close(CTabFolderEvent event) { System.out.println("from view: addCTabFolder2Listener close called. Event: " + event); try
+         * { writeToStream("exit".getBytes()); System.out.println("addCTabFolder2Listener close called. successfully called exit"); }
+         * catch (Exception e) { e.printStackTrace(); } projectTab.getParent().removeCTabFolder2Listener(this); } });
+         */
+
+        /*
+         * view.getViewSite().getPage().addPartListener(new IPartListener() {
+         * @Override public void partActivated(IWorkbenchPart arg0) { System.out.println("TerminalView page.partlistner partActivated"); }
+         * @Override public void partBroughtToTop(IWorkbenchPart arg0) {
+         * System.out.println("TerminalView page.partlistner partBroughtToTop"); }
+         * @Override public void partClosed(IWorkbenchPart arg0) { System.out.println("TerminalView page.partlistner closed"); try {
+         * writeToStream("exit".getBytes()); System.out.println("TerminalView page.partlistner closed called. successfully called exit");
+         * } catch (Exception e) { e.printStackTrace(); } }
+         * @Override public void partDeactivated(IWorkbenchPart arg0) { System.out.println("TerminalView page.partlistner deactivated"); }
+         * @Override public void partOpened(IWorkbenchPart arg0) { System.out.println("TerminalView page.partlistner partOpened"); } });
+         */
+        /*
+         * view.getSite().getShell().addListener(SWT.Close, new Listener() {
+         * @Override public void handleEvent(Event event) { System.out.println("shell!!!! close called. Event: " + event); } });
+         */
 
         if (manager == null) {
             if (Trace.isEnabled()) {
@@ -293,6 +336,7 @@ public class ProjectTab {
      * Performs cleanup.
      */
     public void cleanup() {
+        System.out.println("@ed: terminal service cleanup called.");
         // Remove the registered listener from the calling service.
         terminalService.removeTerminalTabListener(tabListener);
 

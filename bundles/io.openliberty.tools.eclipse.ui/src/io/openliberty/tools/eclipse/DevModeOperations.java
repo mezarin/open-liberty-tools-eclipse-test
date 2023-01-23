@@ -48,6 +48,10 @@ public class DevModeOperations {
      */
     public static final String DEVMODE_START_PARMS_DIALOG_TITLE = "Liberty Dev Mode";
     public static final String DEVMODE_START_PARMS_DIALOG_MSG = "Specify custom parameters for the liberty dev command.";
+
+    public static final String DEVMODE_COMMAND_EXIT = "exit" + System.lineSeparator();
+    public static final String DEVMODE_COMMAND_RUN_TESTS = System.lineSeparator();
+
     public static final String BROWSER_MVN_IT_REPORT_NAME_SUFFIX = "failsafe report";
     public static final String BROWSER_MVN_UT_REPORT_NAME_SUFFIX = "surefire report";
     public static final String BROWSER_GRADLE_TEST_REPORT_NAME_SUFFIX = "test report";
@@ -67,14 +71,18 @@ public class DevModeOperations {
      */
     private String pathEnv;
 
+    /**
+     * Handles debug mode processing.
+     */
     private DebugModeHandler debugModeHandler;
+
     /**
      * The instance of this class.
      */
     private static DevModeOperations instance;
 
     /**
-     * DashboardView
+     * Represents the liberty dashboard view.
      */
     private DashboardView dashboardView;
 
@@ -393,11 +401,8 @@ public class DevModeOperations {
         }
 
         try {
-            // Prepare the dev mode command to stop the server.
-            String cmd = "exit" + System.lineSeparator();
-
             // Issue the command on the terminal.
-            projectTabController.writeTerminalStream(projectName, cmd.getBytes());
+            projectTabController.writeTerminalStream(projectName, DEVMODE_COMMAND_EXIT.getBytes());
 
             // The command to exit dev mode was issued. Set the internal project tab state to STOPPED as
             // indication that the stop command was issued. The project's terminal tab UI will be marked as closed (title and state
@@ -482,11 +487,8 @@ public class DevModeOperations {
         }
 
         try {
-            // Prepare the dev mode command to run a test.
-            String cmd = System.lineSeparator();
-
             // Issue the command on the terminal.
-            projectTabController.writeTerminalStream(projectName, cmd.getBytes());
+            projectTabController.writeTerminalStream(projectName, DEVMODE_COMMAND_RUN_TESTS.getBytes());
         } catch (Exception e) {
             String msg = "An error was detected while processing the run tests request on project " + projectName + ".";
             if (Trace.isEnabled()) {
