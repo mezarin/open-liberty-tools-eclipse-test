@@ -92,6 +92,10 @@
 		    <repository location="file:///Users/mezarin/dev/k8/src/github.com/eclipse/lsp4jakarta/jakarta.jdt/org.eclipse.lsp4jakarta.jdt.site/target/repository"/>
 		    <unit id="org.eclipse.lsp4jakarta.jdt.core" version="0.0.0"/>
 	    </location>
+	    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		    <repository location="file:///Users/mezarin/dev/k8/src/github.ibm.com/liberty-dev-ex/eclipse-jdtls-common-provider/common.jdt/org.eclipse.lspcommon.jdt.site/target/repository/"/>
+		    <unit id="org.eclipse.lspcommon.jdt.core" version="0.0.0"/>
+	    </location>
 	    <location includeDependencyDepth="none" includeDependencyScopes="compile" missingManifest="generate" type="Maven">
 		    <dependencies>
 			    <dependency>
@@ -125,10 +129,6 @@
 				    <type>jar</type>
 			    </dependency>
 		    </dependencies>
-	    </location>
-	    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		    <repository location="file:/Users/mezarin/dev/k8/src/github.ibm.com/liberty-dev-ex/eclipse-jdtls-common-provider/org.eclipse.lspcommon.jdt.site/target/repository/"/>
-		    <unit id="org.eclipse.lspcommon.jdt.core" version="0.0.0"/>
 	    </location>
     </locations>
 </target>

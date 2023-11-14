@@ -21,5 +21,5 @@
     <repository-reference location="https://download.eclipse.org/jdtls/milestones/1.28.0/repository" enabled="true" />
     <repository-reference location="https://download.eclipse.org/lsp4mp/releases/0.10.0/repository" enabled="true" />
     <repository-reference location="file:///Users/mezarin/dev/k8/src/github.com/eclipse/lsp4jakarta/jakarta.jdt/org.eclipse.lsp4jakarta.jdt.site/target/repository" enabled="true" />
-    <repository-reference location="/Users/mezarin/dev/k8/src/github.ibm.com/liberty-dev-ex/eclipse-jdtls-common-provider/org.eclipse.lspcommon.jdt.site/target/repository" enabled="true" />
+    <repository-reference location="file:///Users/mezarin/dev/k8/src/github.ibm.com/liberty-dev-ex/eclipse-jdtls-common-provider/common.jdt/org.eclipse.lspcommon.jdt.site/target/repository" enabled="true" />
 </site>

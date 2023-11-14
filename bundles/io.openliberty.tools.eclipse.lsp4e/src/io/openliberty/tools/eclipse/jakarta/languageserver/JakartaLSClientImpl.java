@@ -117,7 +117,6 @@ public class JakartaLSClientImpl extends LanguageClientImpl implements JakartaLa
     @Override
     public CompletableFuture<JavaFileInfo> getJavaFileInfo(JavaFileInfoParams javaParams) {
         return CompletableFutures.computeAsync(cancelChecker -> {
-            IProgressMonitor monitor = getProgressMonitor(cancelChecker);
             return JakartaPropertiesManagerForJava.getInstance().fileInfo(javaParams, JDTUtilsLSImpl.getInstance());
         });
     }

@@ -52,11 +52,10 @@
             <version>${liberty.ls.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.lsp4jakarta</groupId>
-            <artifactId>org.eclipse.lsp4jakarta.ls</artifactId>
-            <version>${jakarta.ls.version}</version>
-            <classifier>jar-with-dependencies</classifier>
-        </dependency>
+		    <groupId>org.eclipse.lspcommon</groupId>
+		    <artifactId>org.eclipse.lspcommon.ls</artifactId>
+		    <version>0.0.1-SNAPSHOT</version>
+	    </dependency>
     </dependencies>
 
     <build>
