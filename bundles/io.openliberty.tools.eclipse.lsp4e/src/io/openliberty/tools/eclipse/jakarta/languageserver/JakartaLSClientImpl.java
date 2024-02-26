@@ -29,21 +29,21 @@ import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
-import org.eclipse.lsp4jakarta.commons.JakartaJavaCodeActionParams;
-import org.eclipse.lsp4jakarta.commons.JakartaJavaCompletionParams;
-import org.eclipse.lsp4jakarta.commons.JakartaJavaCompletionResult;
-import org.eclipse.lsp4jakarta.commons.JakartaJavaDiagnosticsParams;
-import org.eclipse.lsp4jakarta.commons.JakartaJavaFileInfo;
-import org.eclipse.lsp4jakarta.commons.JakartaJavaFileInfoParams;
-import org.eclipse.lsp4jakarta.commons.JakartaJavaProjectLabelsParams;
-import org.eclipse.lsp4jakarta.commons.JavaCursorContextResult;
-import org.eclipse.lsp4jakarta.commons.ProjectLabelInfoEntry;
-import org.eclipse.lsp4jakarta.jdt.core.ProjectLabelManager;
-import org.eclipse.lsp4jakarta.jdt.core.PropertiesManagerForJava;
-import org.eclipse.lsp4jakarta.jdt.internal.core.ls.JDTUtilsLSImpl;
+import org.eclipse.lsp4jakarta.jdt.core.JakartaPropertiesManagerForJava;
 import org.eclipse.lsp4jakarta.ls.api.JakartaLanguageClientAPI;
-import org.eclipse.lsp4jakarta.commons.codeaction.CodeActionResolveData;
-import org.eclipse.lsp4jakarta.commons.utils.JSONUtility;
+import org.eclipse.lsp4jdt.commons.JavaCodeActionParams;
+import org.eclipse.lsp4jdt.commons.JavaCompletionParams;
+import org.eclipse.lsp4jdt.commons.JavaCompletionResult;
+import org.eclipse.lsp4jdt.commons.JavaCursorContextResult;
+import org.eclipse.lsp4jdt.commons.JavaDiagnosticsParams;
+import org.eclipse.lsp4jdt.commons.JavaFileInfo;
+import org.eclipse.lsp4jdt.commons.JavaFileInfoParams;
+import org.eclipse.lsp4jdt.commons.JavaProjectLabelsParams;
+import org.eclipse.lsp4jdt.commons.ProjectLabelInfoEntry;
+import org.eclipse.lsp4jdt.commons.codeaction.CodeActionResolveData;
+import org.eclipse.lsp4jdt.commons.utils.JSONUtility;
+import org.eclipse.lsp4jdt.core.ProjectLabelManager;
+import org.eclipse.lsp4jdt.participants.core.ls.JDTUtilsLSImpl;
 
 import io.openliberty.tools.eclipse.ls.plugin.LibertyToolsLSPlugin;
 
@@ -72,15 +72,15 @@ public class JakartaLSClientImpl extends LanguageClientImpl implements JakartaLa
      * {@inheritDoc}
      */
     @Override
-    public CompletableFuture<JakartaJavaCompletionResult> getJavaCompletion(JakartaJavaCompletionParams javaParams) {
+    public CompletableFuture<JavaCompletionResult> getJavaCompletion(JavaCompletionParams javaParams) {
         return CompletableFutures.computeAsync(cancelChecker -> {
             IProgressMonitor monitor = getProgressMonitor(cancelChecker);
             CompletionList completionList;
             try {
-                completionList = PropertiesManagerForJava.getInstance().completion(javaParams, JDTUtilsLSImpl.getInstance(), monitor);
-                JavaCursorContextResult javaCursorContext = PropertiesManagerForJava.getInstance().javaCursorContext(javaParams,
+                completionList = JakartaPropertiesManagerForJava.getInstance().completion(javaParams, JDTUtilsLSImpl.getInstance(), monitor);
+                JavaCursorContextResult javaCursorContext = JakartaPropertiesManagerForJava.getInstance().javaCursorContext(javaParams,
                         JDTUtilsLSImpl.getInstance(), monitor);
-                return new JakartaJavaCompletionResult(completionList, javaCursorContext);
+                return new JavaCompletionResult(completionList, javaCursorContext);
             } catch (JavaModelException e) {
                 LibertyToolsLSPlugin.logException(e.getLocalizedMessage(), e);
                 return null;
@@ -94,17 +94,19 @@ public class JakartaLSClientImpl extends LanguageClientImpl implements JakartaLa
     @Override
     public CompletableFuture<List<ProjectLabelInfoEntry>> getAllJavaProjectLabels() {
         return CompletableFutures.computeAsync((cancelChecker) -> {
-            return ProjectLabelManager.getInstance().getProjectLabelInfo();
+        	String pluginId = JakartaPropertiesManagerForJava.getInstance().getPluginId();
+            return ProjectLabelManager.getInstance().getProjectLabelInfo(pluginId);
         });
     }
 
     /**
      * {@inheritDoc}
      */
-    public CompletableFuture<ProjectLabelInfoEntry> getJavaProjectLabels(JakartaJavaProjectLabelsParams javaParams) {
+    public CompletableFuture<ProjectLabelInfoEntry> getJavaProjectLabels(JavaProjectLabelsParams javaParams) {
         return CompletableFutures.computeAsync((cancelChecker) -> {
             IProgressMonitor monitor = getProgressMonitor(cancelChecker);
-            return ProjectLabelManager.getInstance().getProjectLabelInfo(javaParams, JDTUtilsLSImpl.getInstance(), monitor);
+            String pluginId = JakartaPropertiesManagerForJava.getInstance().getPluginId();
+            return ProjectLabelManager.getInstance().getProjectLabelInfo(javaParams, pluginId, JDTUtilsLSImpl.getInstance(), monitor);
         });
     }
 
@@ -112,10 +114,10 @@ public class JakartaLSClientImpl extends LanguageClientImpl implements JakartaLa
      * {@inheritDoc}
      */
     @Override
-    public CompletableFuture<JakartaJavaFileInfo> getJavaFileInfo(JakartaJavaFileInfoParams javaParams) {
+    public CompletableFuture<JavaFileInfo> getJavaFileInfo(JavaFileInfoParams javaParams) {
         return CompletableFutures.computeAsync(cancelChecker -> {
             IProgressMonitor monitor = getProgressMonitor(cancelChecker);
-            return PropertiesManagerForJava.getInstance().fileInfo(javaParams, JDTUtilsLSImpl.getInstance());
+            return JakartaPropertiesManagerForJava.getInstance().fileInfo(javaParams, JDTUtilsLSImpl.getInstance());
         });
     }
 
@@ -123,11 +125,11 @@ public class JakartaLSClientImpl extends LanguageClientImpl implements JakartaLa
      * {@inheritDoc}
      */
     @Override
-    public CompletableFuture<List<PublishDiagnosticsParams>> getJavaDiagnostics(JakartaJavaDiagnosticsParams javaParams) {
+    public CompletableFuture<List<PublishDiagnosticsParams>> getJavaDiagnostics(JavaDiagnosticsParams javaParams) {
         return CompletableFutures.computeAsync((cancelChecker) -> {
             IProgressMonitor monitor = getProgressMonitor(cancelChecker);
             try {
-                return PropertiesManagerForJava.getInstance().diagnostics(javaParams, JDTUtilsLSImpl.getInstance(), monitor);
+                return JakartaPropertiesManagerForJava.getInstance().diagnostics(javaParams, JDTUtilsLSImpl.getInstance(), monitor);
             } catch (JavaModelException e) {
                 LibertyToolsLSPlugin.logException(e.getLocalizedMessage(), e);
                 return Collections.emptyList();
@@ -140,11 +142,11 @@ public class JakartaLSClientImpl extends LanguageClientImpl implements JakartaLa
      */
     @SuppressWarnings("unchecked")
     @Override
-    public CompletableFuture<List<CodeAction>> getJavaCodeAction(JakartaJavaCodeActionParams javaParams) {
+    public CompletableFuture<List<CodeAction>> getJavaCodeAction(JavaCodeActionParams javaParams) {
         return CompletableFutures.computeAsync((cancelChecker) -> {
             IProgressMonitor monitor = getProgressMonitor(cancelChecker);
             try {
-                return (List<CodeAction>) PropertiesManagerForJava.getInstance().codeAction(javaParams, JDTUtilsLSImpl.getInstance(),
+                return (List<CodeAction>) JakartaPropertiesManagerForJava.getInstance().codeAction(javaParams, JDTUtilsLSImpl.getInstance(),
                         monitor);
             } catch (JavaModelException e) {
                 LibertyToolsLSPlugin.logException(e.getLocalizedMessage(), e);
@@ -163,7 +165,7 @@ public class JakartaLSClientImpl extends LanguageClientImpl implements JakartaLa
             try {
                 CodeActionResolveData resolveData = JSONUtility.toModel(unresolved.getData(), CodeActionResolveData.class);
                 unresolved.setData(resolveData);
-                return (CodeAction) PropertiesManagerForJava.getInstance().resolveCodeAction(unresolved, JDTUtilsLSImpl.getInstance(),
+                return (CodeAction) JakartaPropertiesManagerForJava.getInstance().resolveCodeAction(unresolved, JDTUtilsLSImpl.getInstance(),
                         monitor);
             } catch (JavaModelException e) {
                 LibertyToolsLSPlugin.logException(e.getLocalizedMessage(), e);
