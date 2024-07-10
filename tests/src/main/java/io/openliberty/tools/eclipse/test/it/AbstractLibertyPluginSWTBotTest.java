@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2023 IBM Corporation and others.
+ * Copyright (c) 2022, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0 which is available at
@@ -30,6 +30,7 @@ import java.util.List;
 import org.eclipse.buildship.core.BuildConfiguration;
 import org.eclipse.buildship.core.GradleBuild;
 import org.eclipse.buildship.core.GradleCore;
+import org.eclipse.buildship.core.GradleDistribution;
 import org.eclipse.buildship.core.GradleWorkspace;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -64,6 +65,12 @@ public abstract class AbstractLibertyPluginSWTBotTest {
      */
     static SWTBotView dashboard;
 
+    /**
+     * Gradle distribution to be used by buildship.
+     * Gradle version 8.4+ support Java 21. 
+     */
+    static String BUILDSHIP_GRADLE_DISTRIBUTION = "8.8";
+    
     protected static String getMvnCmdFilename() {
         return LibertyPluginTestUtils.onWindows() ? "mvn.cmd" : "mvn";
     }
@@ -195,7 +202,9 @@ public abstract class AbstractLibertyPluginSWTBotTest {
         for (File projectFile : projectsToInstall) {
             IPath projectLocation = org.eclipse.core.runtime.Path
                     .fromOSString(Paths.get(projectFile.getPath()).toAbsolutePath().toString());
-            BuildConfiguration configuration = BuildConfiguration.forRootProjectDirectory(projectLocation.toFile()).build();
+			BuildConfiguration configuration = BuildConfiguration.forRootProjectDirectory(projectLocation.toFile())
+					.gradleDistribution(GradleDistribution.forVersion(BUILDSHIP_GRADLE_DISTRIBUTION))
+					.overrideWorkspaceConfiguration(true).build();
             GradleWorkspace workspace = GradleCore.getWorkspace();
             GradleBuild newBuild = workspace.createBuild(configuration);
             newBuild.synchronize(new NullProgressMonitor());
