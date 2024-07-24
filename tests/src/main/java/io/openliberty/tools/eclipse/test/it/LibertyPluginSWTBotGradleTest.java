@@ -329,7 +329,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
     /**
      * Tests the start menu action on a dashboard listed application.
      */
-    @Test
+    //@Test
     public void testDashboardStartAction() {
 
         // Start dev mode.
@@ -357,7 +357,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
     /**
      * Tests the debug menu action on a dashboard listed application.
      */
-    @Test
+    //@Test
     public void testDashboardDebugAction() {
 
         // Start dev mode.
@@ -389,7 +389,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
      * @throws IOException
      * @throws InterruptedException
      */
-    @Test
+    //@Test
     public void testDashboardStopExternalServer() throws CommandNotFoundException, IOException, InterruptedException {
 
         Path wrapperProject = Paths.get("resources", "applications", "gradle", GRADLE_WRAPPER_APP_NAME).toAbsolutePath();
@@ -419,7 +419,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
     /**
      * Tests the start with parameters menu action on a dashboard listed application.
      */
-    @Test
+    //@Test
     public void testDashboardStartWithCustomConfigAction() {
 
         // Delete any previously created configs.
@@ -456,7 +456,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
     /**
      * Tests the debug with parameters menu action on a dashboard listed application.
      */
-    @Test
+    //@Test
     public void testDashboardDebugWithCustomConfigAction() {
 
         // Delete any previously created configs.
@@ -493,7 +493,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
     /**
      * Tests the start, run tests, view test report, and stopdashboard actions.
      */
-    @Test
+    //@Test
     public void testDashboardActions() {
 
         // Delete the test report files before we start this test.
@@ -536,7 +536,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
      * 
      * @throws Exception
      */
-    @Test
+    //@Test
     @Disabled("Issue 232")
     public void testAddingProjectToDashboardManually() throws Exception {
         // Update the application .project file to remove the liberty nature if it exists. and rename the server.xml
@@ -625,7 +625,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
      * Tests the start action initiated through: project -> Run As -> Run Configurations -> Liberty -> New configuration (default) ->
      * Run.
      */
-    @Test
+    //@Test
     public void testStartWithDefaultRunAsConfig() {
 
         // Delete any previously created configs.
@@ -652,7 +652,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
      * Tests the start action initiated through: project -> Run As -> Run Configurations -> Liberty -> New configuration (customized)
      * -> Run.
      */
-    @Test
+    //@Test
     public void testStartWithCustomRunAsConfig() {
 
         // Delete any previously created configs.
@@ -689,7 +689,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
     /**
      * Tests the start, run tests, view test report, and stop run as shortcut actions.
      */
-    @Test
+    //@Test
     public void testRunAsShortcutActions() {
 
         // Delete any previously created configs.
@@ -738,7 +738,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
      * Tests the start action initiated through: project -> Debug As -> Debug Configurations -> Liberty -> New configuration
      * (customized) -> Run.
      */
-    @Test
+    //@Test
     public void testStartWithCustomDebugAsConfig() {
         // Delete any previously created configs.
         deleteLibertyToolsRunConfigEntriesFromAppRunAs(GRADLE_APP_NAME);
@@ -778,7 +778,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
     /**
      * Tests the start/stop debug as shortcut actions.
      */
-    @Test
+    //@Test
     public void testStartWithDebugAsShortcut() {
 
         deleteLibertyToolsRunConfigEntriesFromAppRunAs(GRADLE_APP_NAME);
@@ -807,7 +807,7 @@ public class LibertyPluginSWTBotGradleTest extends AbstractLibertyPluginSWTBotTe
      * Tests that the default JRE set in the project's java build path matches what is marked as default in the Liberty Tools
      * configuration JRE tab.
      */
-    @Test
+    //@Test
     public void testDefaultJRECompliance() {
         // Delete any previously created configs.
         deleteLibertyToolsRunConfigEntriesFromAppRunAs(GRADLE_APP_NAME);

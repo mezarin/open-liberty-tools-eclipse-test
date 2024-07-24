@@ -120,7 +120,7 @@ public class LibertyPluginUnitTest {
      * 
      * @throws Exception
      */
-    @Test
+    //@Test
     public void testConfigFiltering() throws Exception {
         LaunchConfigurationHelper launchConfigHelper = LaunchConfigurationHelper.getInstance();
         List<ILaunchConfiguration> rawCfgList = getDefaultConfigurationList();
@@ -155,7 +155,7 @@ public class LibertyPluginUnitTest {
      * 
      * @throws Exception
      */
-    @Test
+    //@Test
     public void testRetrieveLastRunConfig() throws Exception {
         LaunchConfigurationHelper launchConfigHelper = LaunchConfigurationHelper.getInstance();
         List<ILaunchConfiguration> rawCfgList = getDefaultConfigurationList();

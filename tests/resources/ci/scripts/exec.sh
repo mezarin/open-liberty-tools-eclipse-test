@@ -39,8 +39,15 @@ main() {
         #  Start the window manager.
         metacity --sm-disable --replace 2> metacity.err &
     fi
+    which gradle
+    gradle -v
+    echo "@ed! what is in cache .. "
+    ls -l Users/runner/.gradle/
+    ls -l Users/runner/.gradle/caches/*
+     echo "@ed! removing cache .. "
+    rm -rf Users/runner/.gradle/caches
     
-    mvn clean install -Declipse.target="$TARGET" -Dosgi.debug=./tests/resources/ci/debug.opts -Dtycho.showEclipseLog -DtestAppImportWait=120000 -DmvnPath="${PWD}/test-tools/liberty-dev-tools/apache-maven-3.9.6" -DgradlePath="${PWD}/test-tools/liberty-dev-tools/gradle-7.4.2" -DmvnLogFile
+    mvn clean install -Declipse.target="$TARGET" -Dosgi.debug=./tests/resources/ci/debug.opts -Dtycho.showEclipseLog -DtestAppImportWait=120000 -DmvnPath="${PWD}/test-tools/liberty-dev-tools/apache-maven-3.9.6" -DgradlePath="${PWD}/test-tools/liberty-dev-tools/gradle-8.8" -DmvnLogFile
 
     # If there were any errors, gather some debug data before exiting.
     rc=$?
